@@ -1,5 +1,6 @@
 from pathlib import Path
 from fastapi import FastAPI, Depends
+from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .config import get_settings
@@ -39,3 +40,15 @@ def me(user=Depends(get_current_user)):
 @app.get("/", tags=["health"])
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/db", tags=["health"])
+def health_db():
+    """
+    Quick DB connectivity check (helps debug 'register not working' issues).
+    """
+    from .database import engine
+
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    return {"db": "ok", "dialect": engine.dialect.name}

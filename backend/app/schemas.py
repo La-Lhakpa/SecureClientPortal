@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -15,13 +16,11 @@ class UserLogin(BaseModel):
 
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     email: EmailStr
     role: str
     created_at: datetime
-
-    class Config:
-        orm_mode = True
 
 
 class Token(BaseModel):
@@ -30,15 +29,13 @@ class Token(BaseModel):
 
 
 class FileUploadResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     original_filename: str
     client_id: Optional[int]
     owner_id: int
     size_bytes: int
     created_at: datetime
-
-    class Config:
-        orm_mode = True
 
 
 class FileAssign(BaseModel):
@@ -46,12 +43,10 @@ class FileAssign(BaseModel):
 
 
 class FileOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     original_filename: str
     client_id: Optional[int]
     owner_id: int
     size_bytes: int
     created_at: datetime
-
-    class Config:
-        orm_mode = True
