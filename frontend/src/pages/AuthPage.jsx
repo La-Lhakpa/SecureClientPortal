@@ -125,7 +125,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden animate-fade-in">
       <SecurityBackground />
-      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-black/8" />
       <div className="relative min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
         <div className="relative hidden lg:flex flex-col justify-between px-16 py-16">
           {/* <div className="absolute inset-0 auth-gradient opacity-90" />
@@ -141,10 +141,10 @@ function AuthPage({ initialMode = "login", onAuth }) {
             </div>
           </div>
           <div className="relative z-10 max-w-md space-y-6">
-            <p className="text-2xl font-semibold leading-tight">
+            <p className="text-2xl font-italic leading-tight">
               Premium, encrypted collaboration for your most trusted client relationships.
             </p>
-            <p className="text-white/70">
+            <p className="text-white/90">
               Experience seamless access, powerful controls, and a calm interface designed for focus.
             </p>
             <div className="flex items-center gap-4 text-sm text-white/70">
