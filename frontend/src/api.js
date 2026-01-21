@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// Default to 8001 because 8000 is commonly taken by other local services on Windows.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001";
 
 let authToken = null;
 

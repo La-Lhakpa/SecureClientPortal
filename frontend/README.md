@@ -10,7 +10,7 @@ npm run dev
 ```
 
 ### Env
-`VITE_API_BASE_URL=http://localhost:8000`
+`VITE_API_BASE_URL=http://localhost:8001`
 
 ## Pages
 - `/login` — login form with link to register
