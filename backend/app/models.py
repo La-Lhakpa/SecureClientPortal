@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -23,8 +23,9 @@ class File(Base):
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    filename = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False)
     stored_path = Column(String, nullable=False)
+    size_bytes = Column(BigInteger, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="files_owned", foreign_keys=[owner_id])

@@ -43,17 +43,32 @@ async function request(path, options = {}) {
 export const apiClient = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: "POST", body: JSON.stringify(body) }),
-  upload: (path, file) =>
-    fetch(`${API_BASE}${path}`, {
-      method: "POST",
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-      body: file,
-    }).then(async (res) => {
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Upload failed");
-      }
-      return res.json();
+  sendFile: ({ clientId, file, onProgress }) =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}/files/send`);
+      if (authToken) xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable && onProgress) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch {
+            resolve();
+          }
+        } else {
+          reject(new Error("Send failed"));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error"));
+      const form = new FormData();
+      form.append("client_id", clientId);
+      form.append("upload", file);
+      xhr.send(form);
     }),
   download: async (path) => {
     const res = await fetch(`${API_BASE}${path}`, {

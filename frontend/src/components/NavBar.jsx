@@ -7,7 +7,7 @@ function NavBar({ user, onLogout }) {
         <span className="brand">Secure File Sharing</span>
         {user && (
           <nav className="nav-links">
-            {user.role === "OWNER" ? <Link to="/owner">Owner</Link> : <Link to="/client">Client</Link>}
+            {user.role === "OWNER" ? <Link to="/send">Send</Link> : <Link to="/client">My Files</Link>}
           </nav>
         )}
       </div>

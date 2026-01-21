@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
@@ -31,9 +31,10 @@ class Token(BaseModel):
 
 class FileUploadResponse(BaseModel):
     id: int
-    filename: str
+    original_filename: str
     client_id: Optional[int]
     owner_id: int
+    size_bytes: int
     created_at: datetime
 
     class Config:
@@ -46,9 +47,10 @@ class FileAssign(BaseModel):
 
 class FileOut(BaseModel):
     id: int
-    filename: str
+    original_filename: str
     client_id: Optional[int]
     owner_id: int
+    size_bytes: int
     created_at: datetime
 
     class Config:

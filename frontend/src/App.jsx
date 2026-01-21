@@ -3,13 +3,16 @@ import { useEffect, useState } from "react";
 import { apiClient, getStoredToken, clearToken, saveToken, setToken } from "./api";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import OwnerDashboard from "./pages/OwnerDashboard";
+import Send from "./pages/Send";
 import ClientDashboard from "./pages/ClientDashboard";
 import NavBar from "./components/NavBar";
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, role }) {
   const token = getStoredToken();
   if (!token) return <Navigate to="/login" replace />;
+  // role gating is handled by server too; this is just UX
+  const storedRole = localStorage.getItem("role");
+  if (role && storedRole && storedRole !== role) return <Navigate to={storedRole === "OWNER" ? "/send" : "/client"} replace />;
   return children;
 }
 
@@ -21,7 +24,13 @@ function App() {
     const token = getStoredToken();
     if (token) setToken(token);
     if (token) {
-      apiClient.get("/users/me").then((res) => setUser(res)).catch(() => clearToken());
+      apiClient
+        .get("/me")
+        .then((res) => {
+          setUser(res);
+          localStorage.setItem("role", res.role);
+        })
+        .catch(() => clearToken());
     }
   }, []);
 
@@ -34,9 +43,10 @@ function App() {
   const handleAuthSuccess = (token) => {
     saveToken(token);
     setToken(token);
-    apiClient.get("/users/me").then((res) => {
+    apiClient.get("/me").then((res) => {
       setUser(res);
-      navigate(res.role === "OWNER" ? "/owner" : "/client");
+      localStorage.setItem("role", res.role);
+      navigate(res.role === "OWNER" ? "/send" : "/client");
     });
   };
 
@@ -48,10 +58,10 @@ function App() {
           <Route path="/login" element={<Login onAuth={handleAuthSuccess} />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/owner"
+            path="/send"
             element={
-              <ProtectedRoute>
-                <OwnerDashboard user={user} />
+              <ProtectedRoute role="OWNER">
+                <Send user={user} />
               </ProtectedRoute>
             }
           />

@@ -1,10 +1,8 @@
-import os
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .config import get_settings
-from .database import engine, Base
 from .routers import auth, files, users
 
 
@@ -25,15 +23,17 @@ storage_dir = Path("storage")
 storage_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=storage_dir), name="static")
 
-
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
-
-
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(files.router)
+
+
+from .dependencies import get_current_user
+
+
+@app.get("/me", tags=["users"])
+def me(user=Depends(get_current_user)):
+    return user
 
 
 @app.get("/", tags=["health"])
