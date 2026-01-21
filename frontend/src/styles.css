@@ -1,7 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 :root {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   background: #f5f7fb;
-  color: #111827;
+  color: #38c4e7;
 }
 
 * {
@@ -30,7 +35,7 @@ body {
 
 .brand {
   font-weight: 700;
-  color: #2563eb;
+  color: #7b98d6;
 }
 
 .nav-links a {
@@ -53,7 +58,7 @@ body {
 
 .pill {
   background: #eef2ff;
-  color: #4338ca;
+  color: #3890ca;
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 13px;
@@ -177,5 +182,183 @@ button.secondary {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+/* Auth visuals + animations */
+.auth-gradient {
+  background: linear-gradient(120deg, #20242b 0%, #343b46 45%, #46505c 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 14s ease infinite;
+}
+
+.floating {
+  position: absolute;
+  animation: floaty 18s ease-in-out infinite;
+}
+
+.delay-1 {
+  animation-delay: 0s;
+}
+
+.delay-2 {
+  animation-delay: 2.5s;
+}
+
+.delay-3 {
+  animation-delay: 5s;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.7s ease both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.7s ease both;
+}
+
+.animate-form {
+  animation: formSwap 0.8s ease both;
+}
+
+.animate-slide-shake {
+  animation: slideIn 5s ease both, shake 0.35s ease 0.05s;
+}
+
+.animate-logo {
+  animation: logoPop 0.8s ease both;
+}
+
+.check-pop {
+  animation: checkPop 0.45s ease both;
+}
+
+.shadow-glow {
+  box-shadow: 0 12px 28px rgba(214, 251, 93, 0.2), 0 0 0 1px rgba(220, 101, 101, 0.4);
+}
+
+.ripple {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 140px;
+  height: 140px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 60%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-18px) translateX(8px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes formSwap {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes logoPop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

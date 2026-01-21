@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { apiClient, getStoredToken, clearToken, saveToken, setToken } from "./api";
 import Login from "./pages/Login";
@@ -16,6 +16,8 @@ function ProtectedRoute({ children }) {
 function App() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
 
   useEffect(() => {
     const token = getStoredToken();
@@ -42,8 +44,8 @@ function App() {
 
   return (
     <div className="app-shell">
-      <NavBar user={user} onLogout={handleLogout} />
-      <div className="page">
+      {!isAuthRoute && <NavBar user={user} onLogout={handleLogout} />}
+      <div className={isAuthRoute ? "" : "page"}>
         <Routes>
           <Route path="/login" element={<Login onAuth={handleAuthSuccess} />} />
           <Route path="/register" element={<Register />} />
