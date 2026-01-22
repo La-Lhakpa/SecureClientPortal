@@ -186,7 +186,7 @@ button.secondary {
 }
 /* Auth visuals + animations */
 .auth-gradient {
-  background: linear-gradient(120deg, #20242b 0%, #343b46 45%, #46505c 100%);
+  background: linear-gradient(120deg, #dbdee3 0%, #dae0ea 45%, #e0e3e8 100%);
   background-size: 200% 200%;
   animation: gradientShift 14s ease infinite;
 }

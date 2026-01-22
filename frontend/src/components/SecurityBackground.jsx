@@ -55,7 +55,7 @@ export default function SecurityBackground() {
 
     const drawGrid = (w, h) => {
       ctx.save();
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.08)";
+      ctx.strokeStyle = "rgba(209, 213, 219, 0.06)";
       ctx.lineWidth = 1;
       const gap = 44;
       for (let x = 0; x < w; x += gap) {
@@ -82,8 +82,8 @@ export default function SecurityBackground() {
       ];
       glows.forEach((g) => {
         const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
-        grad.addColorStop(0, `rgba(226, 232, 240, ${0.22 * pulse})`);
-        grad.addColorStop(1, "rgba(226, 232, 240, 0)");
+        grad.addColorStop(0, `rgba(241, 245, 249, ${0.28 * pulse})`);
+        grad.addColorStop(1, "rgba(241, 245, 249, 0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
@@ -92,7 +92,7 @@ export default function SecurityBackground() {
     };
 
     const drawConnections = () => {
-      const maxDist = 180;
+      const maxDist = 200;
       for (let i = 0; i < particles.length; i += 1) {
         for (let j = i + 1; j < particles.length; j += 1) {
           const a = particles[i];
@@ -102,7 +102,7 @@ export default function SecurityBackground() {
           const dist = Math.hypot(dx, dy);
           if (dist < maxDist) {
             const alpha = (1 - dist / maxDist) * 0.2;
-            ctx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
+            ctx.strokeStyle = `rgba(209, 213, 219, ${alpha})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -118,9 +118,10 @@ export default function SecurityBackground() {
       ctx.clearRect(0, 0, w, h);
 
       const bg = ctx.createLinearGradient(0, 0, w, h);
-      bg.addColorStop(0, "#0f1115");
-      bg.addColorStop(0.5, "#1b1f26");
-      bg.addColorStop(1, "#2a2f38");
+      bg.addColorStop(0, "#1a1d23");
+      bg.addColorStop(0.5, "#2b3038");
+      bg.addColorStop(1, "#3a414c");
+
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 

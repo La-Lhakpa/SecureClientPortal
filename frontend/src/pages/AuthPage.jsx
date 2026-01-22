@@ -147,9 +147,9 @@ function AuthPage({ initialMode = "login", onAuth }) {
             <p className="text-white/90">
               Experience seamless access, powerful controls, and a calm interface designed for focus.
             </p>
-            <div className="flex items-center gap-4 text-sm text-white/70">
-              <div className="rounded-full bg-white/15 px-4 py-1.5">Enterprise grade</div>
-              <div className="rounded-full bg-white/15 px-4 py-1.5">Zero-trust ready</div>
+            <div className="flex items-center gap-10 text-sm text-white/100">
+              <div className="rounded-full bg-white/20 px-4 py-1.5">Enterprise grade</div>
+              <div className="rounded-full bg-white/20 px-4 py-1.5">Zero-trust ready</div>
             </div>
           </div>
 
@@ -165,10 +165,10 @@ function AuthPage({ initialMode = "login", onAuth }) {
         </div>
 
         <div className="relative flex items-center justify-center px-6 py-12">
-          <div className="absolute -top-24 -right-12 h-48 w-48 rounded-full bg-indigo-500/30 blur-3xl" />
-          <div className="absolute -bottom-24 -left-10 h-48 w-48 rounded-full bg-sky-500/30 blur-3xl" />
+          <div className="absolute -top-24 -right-12 h-48 w-48 rounded-full bg-red-500/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-10 h-48 w-48 rounded-full bg-red-500/30 blur-3xl" />
 
-          <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-blur-xl animate-slide-up">
+          <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-md animate-slide-up">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm uppercase tracking-[0.3em] text-white/60">Welcome</p>
@@ -177,8 +177,8 @@ function AuthPage({ initialMode = "login", onAuth }) {
                   {mode === "login" ? "Access your secure workspace." : "Join Secure Client Portal today."}
                 </p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 border border-white/25 animate-logo">
-                <ShieldCheck className="h-5 w-5 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/25 border border-gray-500/50 animate-logo">
+                <ShieldCheck className="h-12 w-12 text-white" />
               </div>
             </div>
 
@@ -222,7 +222,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
                   />
                   <label
                     htmlFor="email"
-                    className="absolute left-10 top-4 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
+                    className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
                   >
                     Email 
                   </label>
@@ -248,9 +248,9 @@ function AuthPage({ initialMode = "login", onAuth }) {
                   />
                   <label
                     htmlFor="password"
-                    className="absolute left-10 top-4 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
+                    className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
                   >
-                    Password
+                    ..............
                   </label>
                   <button
                     type="button"
@@ -259,7 +259,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     disabled={loading || success}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                   {(touched.password || fieldErrors.password) && fieldErrors.password && (
                     <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.password}</p>
@@ -341,7 +341,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
             <div className="mt-6 space-y-4">
               <div className="flex items-center gap-3 text-xs text-white/50">
                 <div className="h-px flex-1 bg-white/10" />
-                <span>or continue with</span>
+                <span>Or continue with</span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
 
