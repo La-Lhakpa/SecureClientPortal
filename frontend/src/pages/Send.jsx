@@ -1,65 +1,89 @@
-import { useEffect, useState } from "react";
-import { apiClient } from "../api";
+import { useState } from "react";
+// DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+import { MOCK_RECIPIENTS } from "../constants/mockData";
 
 function Send() {
-  const [clients, setClients] = useState([]);
-  const [clientId, setClientId] = useState("");
+  const [recipient, setRecipient] = useState("");
   const [file, setFile] = useState(null);
-  const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    apiClient
-      .get("/users/clients")
-      .then((res) => setClients(res))
-      .catch((err) => setError(err.message));
-  }, []);
-
-  const handleSend = async (e) => {
+  const handleSend = (e) => {
     e.preventDefault();
     setError("");
     setStatus("");
-    setProgress(0);
-    if (!clientId || !file) return;
-    try {
-      await apiClient.sendFile({ clientId, file, onProgress: setProgress });
-      setStatus("Sent successfully.");
-      setFile(null);
-      setClientId("");
-    } catch (err) {
-      setError(err.message);
+
+    // Validate recipient and file
+    if (!recipient) {
+      setError("Please select a recipient");
+      return;
     }
+    if (!file) {
+      setError("Please select a file");
+      return;
+    }
+
+    // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+    // Show success message (no backend call yet)
+    setStatus("DEV MODE: File queued for sending");
+    setFile(null);
+    setRecipient("");
+    
+    // Clear status after 3 seconds
+    setTimeout(() => setStatus(""), 3000);
   };
 
   return (
-    <div className="grid">
-      <div className="card">
-        <h3>Send a file</h3>
-        <p className="muted">Pick a client, choose a file, and send securely.</p>
-        <form className="form" onSubmit={handleSend}>
-          <label>Recipient (Client)</label>
-          <select value={clientId} onChange={(e) => setClientId(e.target.value)} required>
-            <option value="" disabled>
-              Select a client
-            </option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.email}
+    <div className="send-page">
+      <div className="send-container">
+        <h1 className="send-title">Send a File</h1>
+        <form className="send-form" onSubmit={handleSend}>
+          <div className="form-group">
+            <label htmlFor="recipient" className="form-label">
+              Recipient
+            </label>
+            <select
+              id="recipient"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              className="form-select"
+            >
+              <option value="" disabled>
+                Select a recipient
               </option>
-            ))}
-          </select>
+              {/* DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY */}
+              {MOCK_RECIPIENTS.map((email) => (
+                <option key={email} value={email}>
+                  {email}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <label>File</label>
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} required />
+          <div className="form-group">
+            <label htmlFor="file" className="form-label">
+              File
+            </label>
+            <input
+              id="file"
+              type="file"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="form-file"
+              accept="*/*"
+            />
+            {file && (
+              <div className="file-info">
+                Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+              </div>
+            )}
+          </div>
 
-          <button type="submit">Send</button>
+          <button type="submit" className="send-button">
+            Send
+          </button>
 
-          {progress > 0 && progress < 100 && (
-            <div className="muted small">Uploading… {progress}%</div>
-          )}
-          {status && <div className="success">{status}</div>}
-          {error && <div className="error">{error}</div>}
+          {status && <div className="send-success">{status}</div>}
+          {error && <div className="send-error">{error}</div>}
         </form>
       </div>
     </div>
@@ -67,4 +91,3 @@ function Send() {
 }
 
 export default Send;
-

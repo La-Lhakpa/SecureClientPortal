@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { apiClient, getStoredToken, clearToken, saveToken, setToken } from "./api";
+// DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+import { getAuth, logout as logoutDev } from "./utils/auth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Send from "./pages/Send";
@@ -19,11 +21,23 @@ function ProtectedRoute({ children, role }) {
 function App() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
 
   useEffect(() => {
     const token = getStoredToken();
     if (token) setToken(token);
     if (token) {
+      // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+      // Check if this is a dev token first
+      const devAuth = getAuth();
+      if (devAuth.token === "dev-token" && devAuth.user) {
+        setUser(devAuth.user);
+        localStorage.setItem("role", devAuth.user.role);
+        return;
+      }
+      
+      // Normal backend auth
       apiClient
         .get("/me")
         .then((res) => {
@@ -35,6 +49,8 @@ function App() {
   }, []);
 
   const handleLogout = () => {
+    // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+    logoutDev();
     clearToken();
     setUser(null);
     navigate("/login");
@@ -43,6 +59,20 @@ function App() {
   const handleAuthSuccess = (token) => {
     saveToken(token);
     setToken(token);
+    
+    // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+    // Check if this is a dev token
+    if (token === "dev-token") {
+      const devAuth = getAuth();
+      if (devAuth.user) {
+        setUser(devAuth.user);
+        localStorage.setItem("role", devAuth.user.role);
+        navigate("/send");
+        return;
+      }
+    }
+    
+    // Normal backend auth
     apiClient.get("/me").then((res) => {
       setUser(res);
       localStorage.setItem("role", res.role);
@@ -52,8 +82,8 @@ function App() {
 
   return (
     <div className="app-shell">
-      <NavBar user={user} onLogout={handleLogout} />
-      <div className="page">
+      {!isAuthRoute && <NavBar user={user} onLogout={handleLogout} />}
+      <div className={isAuthRoute ? "" : "page"}>
         <Routes>
           <Route path="/login" element={<Login onAuth={handleAuthSuccess} />} />
           <Route path="/register" element={<Register />} />
