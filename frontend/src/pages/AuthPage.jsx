@@ -1,4 +1,4 @@
-import SecurityBackground from "../components/SecurityBackground";
+//import SecurityBackground from "../components/SecurityBackground";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -140,9 +140,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
   }, [loading, success, mode]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-hidden animate-fade-in">
-      <SecurityBackground />
-      <div className="absolute inset-0 bg-black/8" />
+    <div className="min-h-screen text-white overflow-hidden animate-fade-in">
       <div className="relative min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
         <div className="relative hidden lg:flex flex-col justify-between px-16 py-16">
           {/* <div className="absolute inset-0 auth-gradient opacity-90" />

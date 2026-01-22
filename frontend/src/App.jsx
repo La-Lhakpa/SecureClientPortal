@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { apiClient, getStoredToken, clearToken, saveToken, setToken } from "./api";
+import SecurityBackground from "./components/SecurityBackground";
+
+
+
 // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
 import { getAuth, logout as logoutDev } from "./utils/auth";
 import Login from "./pages/Login";
@@ -82,32 +86,38 @@ function App() {
 
   return (
     <div className="app-shell">
-      {!isAuthRoute && <NavBar user={user} onLogout={handleLogout} />}
-      <div className={isAuthRoute ? "" : "page"}>
-        <Routes>
-          <Route path="/login" element={<Login onAuth={handleAuthSuccess} />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/send"
-            element={
-              <ProtectedRoute role="OWNER">
-                <Send user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/client"
-            element={
-              <ProtectedRoute>
-                <ClientDashboard user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+      <div className="app-background">
+        <SecurityBackground />
+        <div className="app-overlay" />
+      </div>
+  
+      <div className="app-content">
+        {!isAuthRoute && <NavBar user={user} onLogout={handleLogout} />}
+        <div className={isAuthRoute ? "" : "page"}>
+          <Routes>
+            <Route path="/login" element={<Login onAuth={handleAuthSuccess} />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/send"
+              element={
+                <ProtectedRoute role="OWNER">
+                  <Send user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/client"
+              element={
+                <ProtectedRoute>
+                  <ClientDashboard user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );
 }
-
 export default App;

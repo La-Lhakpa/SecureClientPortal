@@ -40,7 +40,7 @@ function Send() {
         <form className="send-form" onSubmit={handleSend}>
           <div className="form-group">
             <label htmlFor="recipient" className="form-label">
-              Recipient
+              Recipient 
             </label>
             <select
               id="recipient"
