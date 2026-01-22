@@ -13,6 +13,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { apiClient, saveToken, setToken } from "../api";
+// DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+import { loginDev } from "../utils/auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -85,6 +87,21 @@ function AuthPage({ initialMode = "login", onAuth }) {
     setFormError("");
     try {
       if (mode === "login") {
+        // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
+        // Check for dev bypass credentials first
+        if (loginDev(values.email, values.password)) {
+          const devToken = "dev-token";
+          saveToken(devToken);
+          setToken(devToken);
+          setSuccess(true);
+          setTimeout(() => {
+            setLoading(false);
+            onAuth?.(devToken);
+          }, 900);
+          return;
+        }
+        
+        // Normal backend auth (will fail if backend is not ready)
         const res = await apiClient.post("/auth/login", {
           email: values.email,
           password: values.password,
