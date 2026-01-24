@@ -3,30 +3,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
-  Chrome,
   Eye,
   EyeOff,
-  Github,
   Loader2,
   Lock,
   Mail,
   ShieldCheck,
 } from "lucide-react";
-import { apiClient, saveToken, setToken } from "../api";
-// DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
-import { loginDev } from "../utils/auth";
+import { setToken } from "../api";
+import { apiClient } from "../api";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function AuthPage({ initialMode = "login", onAuth }) {
+function AuthPage({ initialMode = "login", onAuth, registrationSuccess, registeredEmail }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mode, setMode] = useState(initialMode);
   const [values, setValues] = useState({
-    username: "",
     email: "",
     password: "",
-    role: "CLIENT",
+    confirmPassword: "",
     remember: true,
   });
   const [touched, setTouched] = useState({});
@@ -48,22 +45,48 @@ function AuthPage({ initialMode = "login", onAuth }) {
     setSuccess(false);
   }, [mode]);
 
+  // Form validation helpers
+  const isEmailValid = useMemo(() => {
+    return values.email && EMAIL_REGEX.test(values.email);
+  }, [values.email]);
+
+  const isPasswordValid = useMemo(() => {
+    return values.password && values.password.length >= 8;
+  }, [values.password]);
+
+  const passwordsMatch = useMemo(() => {
+    if (!values.confirmPassword) return null; // Neutral if empty
+    return values.password === values.confirmPassword;
+  }, [values.password, values.confirmPassword]);
+
+  const isLoginValid = useMemo(() => {
+    return isEmailValid && values.password.length > 0;
+  }, [isEmailValid, values.password]);
+
+  const isRegisterValid = useMemo(() => {
+    return isEmailValid && isPasswordValid && passwordsMatch === true;
+  }, [isEmailValid, isPasswordValid, passwordsMatch]);
+
   const validate = (nextValues) => {
     const nextErrors = {};
-    if (mode === "register") {
-      if (!nextValues.username) nextErrors.username = "Username is required.";
-      else if (nextValues.username.length < 3) nextErrors.username = "Username must be at least 3 characters.";
-      else if (!/^[a-zA-Z0-9_]+$/.test(nextValues.username)) nextErrors.username = "Username can only contain letters, numbers, and underscores.";
-    }
     if (!nextValues.email) nextErrors.email = "Email is required.";
     else if (!EMAIL_REGEX.test(nextValues.email)) nextErrors.email = "Enter a valid email.";
     if (!nextValues.password) nextErrors.password = "Password is required.";
     else if (nextValues.password.length < 8) nextErrors.password = "Use at least 8 characters.";
-    if (mode === "register" && !nextValues.role) nextErrors.role = "Select a role.";
+    if (mode === "register") {
+      if (!nextValues.confirmPassword) {
+        // Only show error if touched
+        if (touched.confirmPassword) {
+          nextErrors.confirmPassword = "Please confirm your password.";
+        }
+      } else if (nextValues.password !== nextValues.confirmPassword) {
+        nextErrors.confirmPassword = "Passwords do not match.";
+      }
+    }
     return nextErrors;
   };
 
-  const fieldErrors = useMemo(() => validate(values), [values, mode]);
+  const fieldErrors = useMemo(() => validate(values), [values, mode, touched]);
 
   const handleChange = (field) => (event) => {
     const value = field === "remember" ? event.target.checked : event.target.value;
@@ -83,7 +106,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
     event.preventDefault();
     const nextErrors = validate(values);
     setFormError("");
-    setTouched({ username: true, email: true, password: true, role: true });
+    setTouched({ email: true, password: true, confirmPassword: true });
     if (Object.keys(nextErrors).length > 0) {
       setErrorKey((prev) => prev + 1);
       return;
@@ -93,50 +116,52 @@ function AuthPage({ initialMode = "login", onAuth }) {
     setFormError("");
     try {
       if (mode === "login") {
-        // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
-        // Check for dev bypass credentials first
-        if (loginDev(values.email, values.password)) {
-          const devToken = "dev-token";
-          saveToken(devToken);
-          setToken(devToken);
-          setSuccess(true);
-          setTimeout(() => {
-            setLoading(false);
-            onAuth?.(devToken);
-          }, 900);
-          return;
-        }
-        
-        // Normal backend auth (will fail if backend is not ready)
-        // Login accepts username OR email
         const res = await apiClient.post("/auth/login", {
-          username_or_email: values.email, // Can be username or email
+          email: values.email,
           password: values.password,
         });
-        saveToken(res.access_token);
+        console.log("[AUTH] Login successful, token received, length:", res.access_token?.length || 0);
         setToken(res.access_token);
         setSuccess(true);
+        // Don't wait - call onAuth immediately with token
         setTimeout(() => {
           setLoading(false);
           onAuth?.(res.access_token);
-        }, 900);
+        }, 500);
       } else {
+        // Register
         await apiClient.post("/auth/register", {
-          username: values.username,
           email: values.email,
           password: values.password,
-          role: values.role,
+          confirm_password: values.confirmPassword,
         });
         setSuccess(true);
-        setTimeout(() => {
-          setLoading(false);
-          navigate("/login");
+        // Auto-login after registration
+        setTimeout(async () => {
+          try {
+            const loginRes = await apiClient.post("/auth/login", {
+              email: values.email,
+              password: values.password,
+            });
+            console.log("[AUTH] Auto-login successful, token received, length:", loginRes.access_token?.length || 0);
+            setToken(loginRes.access_token);
+            setLoading(false);
+            onAuth?.(loginRes.access_token);
+          } catch (err) {
+            setLoading(false);
+            setSuccess(false);
+            setFormError(err.message || "Registration successful, but login failed. Please try logging in.");
+            setErrorKey((prev) => prev + 1);
+            setTimeout(() => navigate("/login"), 2000);
+          }
         }, 900);
       }
     } catch (err) {
       setLoading(false);
       setSuccess(false);
-      setFormError(err.message || "Something went wrong. Try again.");
+      // Show backend error message if available
+      const errorMessage = err.message || "Something went wrong. Try again.";
+      setFormError(errorMessage);
       setErrorKey((prev) => prev + 1);
     }
   };
@@ -228,33 +253,6 @@ function AuthPage({ initialMode = "login", onAuth }) {
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4" key={mode}>
               <div className="space-y-4 animate-form">
-                {mode === "register" && (
-                  <div className="relative">
-                    <div className="pointer-events-none absolute left-4 top-4 text-white/40">
-                      <Mail className="h-4 w-4" />
-                    </div>
-                    <input
-                      id="username"
-                      type="text"
-                      value={values.username}
-                      onChange={handleChange("username")}
-                      onBlur={handleBlur("username")}
-                      placeholder=" "
-                      autoComplete="username"
-                      disabled={loading || success}
-                      className="peer w-full rounded-2xl border border-white/20 bg-white/10 px-10 pb-3 pt-6 text-sm text-white outline-none transition focus:border-sky-300/70 focus:ring-2 focus:ring-sky-400/40"
-                    />
-                    <label
-                      htmlFor="username"
-                      className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
-                    >
-                      Username
-                    </label>
-                    {(touched.username || fieldErrors.username) && fieldErrors.username && (
-                      <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.username}</p>
-                    )}
-                  </div>
-                )}
                 <div className="relative">
                   <div className="pointer-events-none absolute left-4 top-4 text-white/40">
                     <Mail className="h-4 w-4" />
@@ -274,7 +272,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
                     htmlFor="email"
                     className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
                   >
-                    {mode === "login" ? "Email or Username" : "Email"}
+                    Email
                   </label>
                   {(touched.email || fieldErrors.email) && fieldErrors.email && (
                     <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.email}</p>
@@ -318,26 +316,34 @@ function AuthPage({ initialMode = "login", onAuth }) {
 
                 {mode === "register" && (
                   <div className="relative">
-                    <select
-                      id="role"
-                      value={values.role}
-                      onChange={handleChange("role")}
-                      onBlur={handleBlur("role")}
+                    <div className="pointer-events-none absolute left-4 top-4 text-white/40">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={values.confirmPassword}
+                      onChange={handleChange("confirmPassword")}
+                      onBlur={handleBlur("confirmPassword")}
+                      placeholder=" "
+                      autoComplete="new-password"
                       disabled={loading || success}
-                      className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 pb-3 pt-5 text-sm text-white text-left outline-none transition focus:border-sky-300/70 focus:ring-2 focus:ring-sky-400/40"
+                      className={`peer w-full rounded-2xl border bg-white/10 px-10 pb-3 pt-6 text-sm text-white outline-none transition ${
+                        !values.confirmPassword
+                          ? "border-white/20 focus:border-sky-300/70 focus:ring-2 focus:ring-sky-400/40"
+                          : passwordsMatch === true
+                          ? "border-green-400/50 focus:border-green-400/70 focus:ring-2 focus:ring-green-400/40 confirm-password-glow-green"
+                          : "border-red-400/50 focus:border-red-400/70 focus:ring-2 focus:ring-red-400/40 confirm-password-glow-red"
+                      }`}
+                    />
+                    <label
+                      htmlFor="confirmPassword"
+                      className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
                     >
-                      <option className="text-slate-900 text-right" value="OWNER">
-                        Owner
-                      </option>
-                      <option className="text-slate-900 text-right" value="CLIENT">
-                        Client
-                      </option>
-                    </select>
-                    <label htmlFor="role" className="absolute left-4 top-3 text-xs uppercase tracking-[0.2em] text-white/50">
-                      Role
+                      Confirm Password
                     </label>
-                    {(touched.role || fieldErrors.role) && fieldErrors.role && (
-                      <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.role}</p>
+                    {touched.confirmPassword && values.confirmPassword && passwordsMatch === false && (
+                      <p className="mt-2 text-xs text-rose-200 animate-slide-shake">Passwords do not match</p>
                     )}
                   </div>
                 )}
@@ -371,16 +377,20 @@ function AuthPage({ initialMode = "login", onAuth }) {
                 {success && (
                   <div className="flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-100">
                     <CheckCircle2 className="h-4 w-4 check-pop" />
-                    {mode === "login" ? "Authenticated. Redirecting..." : "Account created. Redirecting..."}
+                    {mode === "login" 
+                      ? (registrationSuccess 
+                          ? `Registration successful! Please log in${registeredEmail ? ` with ${registeredEmail}` : ""}.`
+                          : "Authenticated. Redirecting...")
+                      : "Registration successful! Redirecting to login..."}
                   </div>
                 )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading || success}
+                disabled={loading || success || (mode === "login" ? !isLoginValid : !isRegisterValid)}
                 onClick={() => setRippleKey((prev) => prev + 1)}
-                className="relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-white/70"
+                className="relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
               >
                 <span key={rippleKey} className="ripple" />
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -395,22 +405,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
                 <div className="h-px flex-1 bg-white/10" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:border-white/40 hover:text-white"
-                >
-                  <Chrome className="h-4 w-4" />
-                  Google
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:border-white/40 hover:text-white"
-                >
-                  <Github className="h-4 w-4" />
-                  GitHub
-                </button>
-              </div>
+              <GoogleSignInButton onSuccess={onAuth} />
             </div>
 
             <div className="mt-6 text-center text-sm text-white/60">

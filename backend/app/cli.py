@@ -2,7 +2,7 @@ import argparse
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .models import User
-from .security import get_password_hash
+from .core.security import hash_password as get_password_hash
 
 
 def seed(owner_email: str, owner_password: str, client_email: str, client_password: str):

@@ -1,55 +1,65 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from pydantic import ConfigDict
 
 
 class UserCreate(BaseModel):
-    username: str
     email: EmailStr
     password: str
-    role: str = "CLIENT"
+    confirm_password: str
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+    
+    @model_validator(mode="after")
+    def check_passwords_match(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
 
 
 class UserLogin(BaseModel):
-    # Allow login by username OR email
-    username_or_email: str
+    email: EmailStr
     password: str
+
+
+class GoogleToken(BaseModel):
+    id_token: str
 
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    username: str
     email: EmailStr
-    role: str
     created_at: datetime
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: UserOut
 
 
 class FileUploadResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     original_filename: str
-    client_id: Optional[int]
-    owner_id: int
+    sender_id: int
+    receiver_id: int
     size_bytes: int
     created_at: datetime
-
-
-class FileAssign(BaseModel):
-    client_id: int
 
 
 class FileOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     original_filename: str
-    client_id: Optional[int]
-    owner_id: int
+    sender_id: int
+    receiver_id: int
     size_bytes: int
     created_at: datetime

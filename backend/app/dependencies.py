@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from .database import get_db
 from .models import User
-from .security import decode_access_token
+from .core.security import decode_access_token
 
 
 auth_scheme = HTTPBearer()
@@ -21,7 +21,7 @@ def get_current_user(
     token = credentials.credentials
     payload = decode_access_token(token)
     if not payload or "sub" not in payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
     user = db.query(User).filter(User.id == int(payload["sub"])).first()
     if not user:
@@ -29,10 +29,3 @@ def get_current_user(
     return user
 
 
-def role_required(required_role: str):
-    def dependency(user: User = Depends(get_current_user)) -> User:
-        if user.role != required_role:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-        return user
-
-    return dependency

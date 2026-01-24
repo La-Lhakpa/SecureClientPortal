@@ -6,15 +6,17 @@ import sys
 
 sys.path.append(os.path.abspath("."))
 
-from app.config import get_settings  # noqa: E402
 from app.database import Base  # noqa: E402
 from app import models  # noqa: F401, E402
 
 config = context.config
 fileConfig(config.config_file_name)
 
-settings = get_settings()
-#config.set_main_option("sqlalchemy.url", settings.database_url)
+# ❌ Removed dynamic override
+# from app.config import get_settings
+# settings = get_settings()
+# config.set_main_option("sqlalchemy.url", settings.database_url)
+
 target_metadata = Base.metadata
 
 

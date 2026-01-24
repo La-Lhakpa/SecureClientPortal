@@ -5,14 +5,28 @@ from passlib.context import CryptContext
 from .config import get_settings
 
 
+# Use a single, consistent CryptContext instance
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Verify a plain password against a hashed password.
+    Returns True if password matches, False otherwise.
+    """
+    try:
+        result = pwd_context.verify(plain_password, hashed_password)
+        return result
+    except Exception as e:
+        print(f"[SECURITY] Password verification error: {e}")
+        return False
 
 
 def get_password_hash(password: str) -> str:
+    """
+    Hash a password using bcrypt.
+    Returns the hashed password string.
+    """
     return pwd_context.hash(password)
 
 
