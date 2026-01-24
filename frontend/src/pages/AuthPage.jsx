@@ -23,6 +23,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
   const navigate = useNavigate();
   const [mode, setMode] = useState(initialMode);
   const [values, setValues] = useState({
+    username: "",
     email: "",
     password: "",
     role: "CLIENT",
@@ -49,6 +50,11 @@ function AuthPage({ initialMode = "login", onAuth }) {
 
   const validate = (nextValues) => {
     const nextErrors = {};
+    if (mode === "register") {
+      if (!nextValues.username) nextErrors.username = "Username is required.";
+      else if (nextValues.username.length < 3) nextErrors.username = "Username must be at least 3 characters.";
+      else if (!/^[a-zA-Z0-9_]+$/.test(nextValues.username)) nextErrors.username = "Username can only contain letters, numbers, and underscores.";
+    }
     if (!nextValues.email) nextErrors.email = "Email is required.";
     else if (!EMAIL_REGEX.test(nextValues.email)) nextErrors.email = "Enter a valid email.";
     if (!nextValues.password) nextErrors.password = "Password is required.";
@@ -77,7 +83,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
     event.preventDefault();
     const nextErrors = validate(values);
     setFormError("");
-    setTouched({ email: true, password: true, role: true });
+    setTouched({ username: true, email: true, password: true, role: true });
     if (Object.keys(nextErrors).length > 0) {
       setErrorKey((prev) => prev + 1);
       return;
@@ -102,8 +108,9 @@ function AuthPage({ initialMode = "login", onAuth }) {
         }
         
         // Normal backend auth (will fail if backend is not ready)
+        // Login accepts username OR email
         const res = await apiClient.post("/auth/login", {
-          email: values.email,
+          username_or_email: values.email, // Can be username or email
           password: values.password,
         });
         saveToken(res.access_token);
@@ -115,6 +122,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
         }, 900);
       } else {
         await apiClient.post("/auth/register", {
+          username: values.username,
           email: values.email,
           password: values.password,
           role: values.role,
@@ -220,6 +228,33 @@ function AuthPage({ initialMode = "login", onAuth }) {
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4" key={mode}>
               <div className="space-y-4 animate-form">
+                {mode === "register" && (
+                  <div className="relative">
+                    <div className="pointer-events-none absolute left-4 top-4 text-white/40">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <input
+                      id="username"
+                      type="text"
+                      value={values.username}
+                      onChange={handleChange("username")}
+                      onBlur={handleBlur("username")}
+                      placeholder=" "
+                      autoComplete="username"
+                      disabled={loading || success}
+                      className="peer w-full rounded-2xl border border-white/20 bg-white/10 px-10 pb-3 pt-6 text-sm text-white outline-none transition focus:border-sky-300/70 focus:ring-2 focus:ring-sky-400/40"
+                    />
+                    <label
+                      htmlFor="username"
+                      className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
+                    >
+                      Username
+                    </label>
+                    {(touched.username || fieldErrors.username) && fieldErrors.username && (
+                      <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.username}</p>
+                    )}
+                  </div>
+                )}
                 <div className="relative">
                   <div className="pointer-events-none absolute left-4 top-4 text-white/40">
                     <Mail className="h-4 w-4" />
@@ -239,7 +274,7 @@ function AuthPage({ initialMode = "login", onAuth }) {
                     htmlFor="email"
                     className="absolute left-10 top-2 text-xs uppercase tracking-[0.2em] text-white/50 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:tracking-normal peer-focus:top-4 peer-focus:text-xs peer-focus:tracking-[0.2em]"
                   >
-                    Email 
+                    {mode === "login" ? "Email or Username" : "Email"}
                   </label>
                   {(touched.email || fieldErrors.email) && fieldErrors.email && (
                     <p className="mt-2 text-xs text-rose-200 animate-slide-shake">{fieldErrors.email}</p>
