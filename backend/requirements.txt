@@ -14,3 +14,4 @@ python-dotenv
 pytest
 httpx
 google-auth
+zipstream-ng

@@ -48,6 +48,47 @@ class UserPublic(BaseModel):
     email: EmailStr
 
 
+class TransferSendResponse(BaseModel):
+    transfer_id: int
+    receiver: UserPublic
+    file_count: int
+    created_at: datetime
+    generated_access_code: Optional[str] = None
+
+
+class TransferVerifyRequest(BaseModel):
+    access_code: str
+
+
+class TransferVerifyResponse(BaseModel):
+    verified: bool
+    transfer_access_token: Optional[str] = None
+    failed_attempts: Optional[int] = None
+
+
+class TransferListItem(BaseModel):
+    transfer_id: int
+    sender_email: EmailStr
+    receiver_email: EmailStr
+    file_count: int
+    created_at: datetime
+    status: str
+
+
+class TransferFileOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    transfer_id: int
+    original_filename: str
+    size_bytes: int
+    content_type: Optional[str] = None
+    created_at: datetime
+
+
+class IncomingCountResponse(BaseModel):
+    count: int
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

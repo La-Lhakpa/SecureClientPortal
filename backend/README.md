@@ -1,22 +1,21 @@
 # Backend (FastAPI)
 
-FastAPI service providing auth, role-protected file operations, and audit logging.
+FastAPI service providing JWT auth, file sharing, and audit logging.
 
 ## Setup
 ```bash
-python -m venv .venv && source .venv/bin/activate  # on Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
 
 ## Running
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ## Database
-- Default: SQLite file `app.db` in project root (configured via `DATABASE_URL`)
-- Production-ready: Postgres (e.g. `postgresql+psycopg2://user:pass@host/db`)
+- Postgres (recommended): `postgresql://user:pass@host:5432/db`
+- Configured via `DATABASE_URL` in `.env`.
 
 ### Alembic
 ```bash
@@ -27,11 +26,24 @@ alembic revision --autogenerate -m "msg"  # create new revision
 ## Auth
 - Email/password with bcrypt hashing.
 - JWT access tokens with configurable expiry.
-- Roles: `OWNER`, `CLIENT`.
+- No roles.
+- Google Sign-In supported via `POST /auth/google` (server-side ID token verification).
 
 ## File Storage
-- Uploads saved to `storage/` (ignored by git).
+- Uploads saved under `STORAGE_DIR` (default: `backend/storage/`, ignored by git).
 - Access control enforced in routes.
+
+## Transfers (multi-file + access code gating)
+- New flow:
+  - `POST /transfers/send` (multipart) — send multiple files + one access code
+  - `POST /transfers/{id}/verify` — receiver verifies access code, receives short-lived `transfer_access_token`
+  - `GET /transfers/received`, `GET /transfers/sent` — transfer lists
+  - `GET /transfers/{id}/files` — list transfer files (receiver requires `X-Transfer-Token`)
+  - `GET /transfers/{id}/files/{file_id}/download` — stream download (receiver requires `X-Transfer-Token`)
+  - `GET /transfers/{id}/download-all` — stream zip download (receiver requires `X-Transfer-Token`)
+
+## Legacy endpoints
+- Existing `/files/*` endpoints remain for backward compatibility.
 
 ## Tests
 ```bash

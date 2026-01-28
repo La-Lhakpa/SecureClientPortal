@@ -10,12 +10,12 @@ npm run dev
 ```
 
 ### Env
-`VITE_API_BASE_URL=http://localhost:8001`
+`VITE_API_BASE_URL=http://127.0.0.1:8010`
+`VITE_GOOGLE_CLIENT_ID=...` (optional, for Google Sign-In)
 
 ## Pages
 - `/login` — login form with link to register
 - `/register` — registration
-- `/owner` — upload, list, assign files
-- `/client` — view and download own files
+- `/dashboard` — send transfers, view sent/received, verify code, download files/zip
 
 Token is stored in `localStorage` and sent via `Authorization: Bearer ...`.

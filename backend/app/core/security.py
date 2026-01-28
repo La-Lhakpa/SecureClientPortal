@@ -96,3 +96,50 @@ def normalize_email(email: str) -> str:
         Normalized email address
     """
     return email.strip().lower()
+
+
+def hash_access_code(access_code: str) -> str:
+    """
+    Hash a transfer access code using the same bcrypt context.
+    """
+    return pwd_context.hash(access_code)
+
+
+def verify_access_code(access_code: str, access_code_hash: str) -> bool:
+    """
+    Verify a transfer access code against its stored hash.
+    """
+    try:
+        return pwd_context.verify(access_code, access_code_hash)
+    except Exception as e:
+        print(f"[SECURITY] Access code verification error: {e}")
+        return False
+
+
+def create_transfer_access_token(transfer_id: int, receiver_id: int, expires_minutes: int = 15) -> str:
+    """
+    Create a short-lived token that grants access to a specific transfer for a receiver.
+    """
+    settings = get_settings()
+    to_encode = {
+        "typ": "transfer",
+        "tid": str(transfer_id),
+        "rid": str(receiver_id),
+    }
+    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_transfer_access_token(token: str) -> Optional[dict]:
+    """
+    Decode and verify a transfer access token.
+    """
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        if payload.get("typ") != "transfer":
+            return None
+        return payload
+    except JWTError:
+        return None

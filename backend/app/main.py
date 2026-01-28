@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .config import get_settings
 from .routers import auth, files, users
+from .routers import transfers
 
 
 settings = get_settings()
@@ -38,6 +39,7 @@ app.mount("/static", StaticFiles(directory=storage_dir), name="static")
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(files.router)
+app.include_router(transfers.router)
 
 
 from .dependencies import get_current_user
