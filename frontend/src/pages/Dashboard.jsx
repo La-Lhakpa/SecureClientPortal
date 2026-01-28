@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "../api";
 import { Upload, Download, Send, Inbox, File } from "lucide-react";
 
 function Dashboard({ user }) {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(user || null);
   const [users, setUsers] = useState([]);
+  const [recipientsLoading, setRecipientsLoading] = useState(false);
   const [selectedReceiver, setSelectedReceiver] = useState("");
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -13,45 +17,61 @@ function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // If user prop is not available, fetch it
   useEffect(() => {
-    if (!user) {
-      console.log("[Dashboard] User prop not available, fetching from /me");
-      apiClient.get("/me")
-        .then((userData) => {
-          console.log("[Dashboard] User fetched:", userData);
-          // User will be set by parent App component, but we can proceed
-        })
-        .catch((err) => {
-          console.error("[Dashboard] Failed to fetch user:", err);
-          setError("Failed to load user data");
-        });
-    }
+    if (user) setCurrentUser(user);
   }, [user]);
 
+  // If user prop is not available, fetch it via /me (fallback)
   useEffect(() => {
-    if (user) {
+    if (!currentUser) {
+      apiClient
+        .get("/me")
+        .then((me) => {
+          setCurrentUser(me);
+        })
+        .catch((err) => {
+          if (err?.status === 401) {
+            setError("Session expired. Please log in again.");
+            navigate("/login", { replace: true });
+            return;
+          }
+          setError(err.message || "Failed to load user data");
+        });
+    }
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    if (currentUser) {
       loadData();
     }
-  }, [user]);
+  }, [currentUser]);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      setRecipientsLoading(true);
       const [usersRes, sentRes, receivedRes] = await Promise.all([
         apiClient.get("/users"),
         apiClient.get("/files/sent"),
         apiClient.get("/files/received"),
       ]);
-      setUsers(usersRes.filter((u) => u.id !== user.id)); // Exclude current user
+      // Backend already excludes current user, but keep a defensive filter
+      const meId = currentUser?.id;
+      setUsers(meId ? usersRes.filter((u) => u.id !== meId) : usersRes);
       setSentFiles(sentRes);
       setReceivedFiles(receivedRes);
       setError("");
     } catch (err) {
+      if (err?.status === 401) {
+        setError("Session expired. Please log in again.");
+        navigate("/login", { replace: true });
+        return;
+      }
       setError(err.message || "Failed to load data");
       console.error("Load error:", err);
     } finally {
       setLoading(false);
+      setRecipientsLoading(false);
     }
   };
 
@@ -87,6 +107,11 @@ function Dashboard({ user }) {
       await loadData();
       setTimeout(() => setUploadStatus(""), 3000);
     } catch (err) {
+      if (err?.status === 401) {
+        setError("Session expired. Please log in again.");
+        navigate("/login", { replace: true });
+        return;
+      }
       setError(err.message || "Failed to send file");
       setUploadStatus("");
       setUploadProgress(0);
@@ -124,12 +149,12 @@ function Dashboard({ user }) {
   };
 
   const getSenderName = (senderId) => {
-    if (senderId === user.id) return "You";
+    if (senderId === currentUser?.id) return "You";
     const sender = users.find((u) => u.id === senderId);
     return sender ? sender.email : `User ${senderId}`;
   };
 
-  if (!user) {
+  if (!currentUser) {
     return (
       <div className="dashboard-page">
         <div className="dashboard-container">
@@ -159,7 +184,7 @@ function Dashboard({ user }) {
     <div className="dashboard-page">
       <div className="dashboard-container">
         <h1 className="dashboard-title">File Sharing Dashboard</h1>
-        <p className="dashboard-subtitle">Welcome, {user.email}</p>
+        <p className="dashboard-subtitle">Welcome, {currentUser.email}</p>
 
         {error && (
           <div className="alert alert-error mb-6">
@@ -185,12 +210,20 @@ function Dashboard({ user }) {
                 className="form-select"
                 required
               >
-                <option value="">Select a receiver...</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.email}
-                  </option>
-                ))}
+                {recipientsLoading ? (
+                  <option value="">Loading recipients…</option>
+                ) : users.length === 0 ? (
+                  <option value="">No recipients available (create another account).</option>
+                ) : (
+                  <>
+                    <option value="">Select a receiver...</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.email}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
@@ -230,7 +263,17 @@ function Dashboard({ user }) {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary" disabled={uploadProgress > 0}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={
+                uploadProgress > 0 ||
+                recipientsLoading ||
+                users.length === 0 ||
+                !selectedReceiver ||
+                !file
+              }
+            >
               <Upload className="inline mr-2" size={18} />
               Send File
             </button>
@@ -253,7 +296,7 @@ function Dashboard({ user }) {
                   <div className="file-info">
                     <p className="file-name">{f.original_filename}</p>
                     <p className="file-meta">
-                      To: {getReceiverName(f.receiver_id)} • {formatFileSize(f.size_bytes)} • {formatDate(f.created_at)}
+                      To: {f.receiver?.email || getReceiverName(f.receiver_id)} • {formatFileSize(f.size_bytes)} • {formatDate(f.created_at)}
                     </p>
                   </div>
                   <button
@@ -284,7 +327,7 @@ function Dashboard({ user }) {
                   <div className="file-info">
                     <p className="file-name">{f.original_filename}</p>
                     <p className="file-meta">
-                      From: {getSenderName(f.sender_id)} • {formatFileSize(f.size_bytes)} • {formatDate(f.created_at)}
+                      From: {f.sender?.email || getSenderName(f.sender_id)} • {formatFileSize(f.size_bytes)} • {formatDate(f.created_at)}
                     </p>
                   </div>
                   <button

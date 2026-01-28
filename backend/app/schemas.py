@@ -39,6 +39,15 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class UserPublic(BaseModel):
+    """
+    Public user fields safe for recipient dropdowns.
+    """
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    email: EmailStr
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -52,6 +61,10 @@ class FileUploadResponse(BaseModel):
     sender_id: int
     receiver_id: int
     size_bytes: int
+    content_type: Optional[str] = None
+    stored_filename: Optional[str] = None
+    sender: Optional[UserPublic] = None
+    receiver: Optional[UserPublic] = None
     created_at: datetime
 
 
@@ -62,4 +75,8 @@ class FileOut(BaseModel):
     sender_id: int
     receiver_id: int
     size_bytes: int
+    content_type: Optional[str] = None
+    stored_filename: Optional[str] = None
+    sender: Optional[UserPublic] = None
+    receiver: Optional[UserPublic] = None
     created_at: datetime

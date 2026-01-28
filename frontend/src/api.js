@@ -72,7 +72,9 @@ async function request(path, options = {}) {
       // Use detail field from FastAPI error response, or fallback to message
       const errorMsg = err.detail || err.message || `Request failed: ${res.status} ${res.statusText}`;
       console.error(`[API] Error [${res.status}]:`, errorMsg, "URL:", url);
-      throw new Error(errorMsg);
+      const e = new Error(errorMsg);
+      e.status = res.status;
+      throw e;
     }
     const contentType = res.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -113,8 +115,19 @@ export const apiClient = {
             resolve();
           }
         } else {
-          const error = xhr.responseText ? JSON.parse(xhr.responseText).detail : "Send failed";
-          reject(new Error(error));
+          if (xhr.status === 401) {
+            console.warn("[API] Received 401 on sendFile, clearing token");
+            clearToken();
+          }
+          let errorMsg = "Send failed";
+          try {
+            errorMsg = xhr.responseText ? JSON.parse(xhr.responseText).detail : errorMsg;
+          } catch {
+            // ignore parse errors
+          }
+          const e = new Error(errorMsg);
+          e.status = xhr.status;
+          reject(e);
         }
       };
       xhr.onerror = () => reject(new Error(`Network error - cannot reach ${API_BASE}`));

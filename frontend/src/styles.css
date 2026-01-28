@@ -654,6 +654,12 @@ button.secondary {
   font-size: 0.875rem;
 }
 
+/* Fix invisible dropdown options (white-on-white on some platforms) */
+.dashboard-page .form-select option {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
 .form-select:focus,
 .form-input:focus {
   outline: none;

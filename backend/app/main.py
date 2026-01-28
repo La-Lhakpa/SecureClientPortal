@@ -27,8 +27,12 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-storage_dir = Path("storage")
-storage_dir.mkdir(exist_ok=True)
+# Storage directory (relative to backend root unless absolute path is provided)
+backend_root = Path(__file__).resolve().parents[1]  # .../backend/app -> .../backend
+storage_dir = Path(settings.storage_dir)
+if not storage_dir.is_absolute():
+    storage_dir = backend_root / storage_dir
+storage_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=storage_dir), name="static")
 
 app.include_router(auth.router)
@@ -77,7 +81,7 @@ def debug_auth(request: Request):
     Shows if Authorization header is present and token details.
     Call with: Authorization: Bearer <token> header
     """
-    from ..core.security import decode_access_token
+    from .core.security import decode_access_token
     
     authorization = request.headers.get("Authorization")
     

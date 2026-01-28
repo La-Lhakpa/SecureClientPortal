@@ -10,5 +10,6 @@ env/
 *.db
 storage/
 backend/logs/
+backend/storage/
 frontend/.env
 backend/.env

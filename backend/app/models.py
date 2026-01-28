@@ -23,8 +23,10 @@ class File(Base):
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     original_filename = Column(String, nullable=False)
+    stored_filename = Column(String, nullable=False)  # uuid-based safe filename
     stored_path = Column(String, nullable=False)
     size_bytes = Column(BigInteger, nullable=False, default=0)
+    content_type = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sender = relationship("User", back_populates="files_sent", foreign_keys=[sender_id])
