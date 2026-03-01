@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
+import HeroBanner from "./HeroBanner";
 
 function NavBar({ user, onLogout }) {
   return (
     <header className="nav">
       <div className="nav-left">
-        <span className="brand">Secure File Sharing</span>
+        <HeroBanner />
         {user && (
           <nav className="nav-links">
-            {user.role === "OWNER" ? <Link to="/send">Send</Link> : <Link to="/client">My Files</Link>}
+            {user.role === "OWNER" ? <Link to="/send">Owner</Link> : <Link to="/client">Client</Link>}
           </nav>
         )}
       </div>
