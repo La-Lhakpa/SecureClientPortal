@@ -12,6 +12,7 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
+import { ShaderCanvas, shaders } from "../components/ui/astral-flare-shader";
 import { apiClient, saveToken, setToken } from "../api";
 // DEV ONLY — REMOVE WHEN BACKEND AUTH IS READY
 import { loginDev } from "../utils/auth";
@@ -140,11 +141,14 @@ function AuthPage({ initialMode = "login", onAuth }) {
   }, [loading, success, mode]);
 
   return (
-    <div className="min-h-screen text-white overflow-hidden animate-fade-in">
-      <div className="relative min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
+    <div className="relative min-h-screen text-white overflow-hidden animate-fade-in">
+      <ShaderCanvas
+        fragmentShader={shaders.ASTRAL_FLARE}
+        className="fixed inset-0"
+        style={{ zIndex: 0 }}
+      />
+      <div className="relative z-10 min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
         <div className="relative hidden lg:flex flex-col justify-between px-16 py-16">
-          {/* <div className="absolute inset-0 auth-gradient opacity-90" />
-          <div className="absolute inset-0 bg-black/25" /> */}
 
           <div className="relative z-10 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 border border-white/30 shadow-lg animate-logo">
